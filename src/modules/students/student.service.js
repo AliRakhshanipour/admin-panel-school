@@ -1,16 +1,21 @@
 import { StatusCodes } from 'http-status-codes';
 import { Student } from './student.model.js';
 import createHttpError from 'http-errors';
+import { checkFieldExists } from '../fields/field.service.js';
 
 export async function createStudentHandler(req, res, next) {
   try {
+    const { subFieldId } = req.body;
+    if (subFieldId) {
+      await checkFieldExists(subFieldId);
+    }
     const student = await Student.create(req.body);
     res.status(StatusCodes.CREATED).json({
       message: 'Student created successfully',
       student,
     });
   } catch (error) {
-    next(error); // Propagate the error for centralized error handling
+    next(error);
   }
 }
 

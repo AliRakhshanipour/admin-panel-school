@@ -197,6 +197,14 @@ const Student = sequelize.define(
         max: 20,
       },
     },
+    subFieldId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'fields', // references the 'Field' model
+        key: 'id',
+      },
+      allowNull: false,
+    },
   },
   {
     tableName: 'students',
@@ -214,13 +222,14 @@ const Student = sequelize.define(
         student.phone = normalizePhoneNumber(student.phone);
         student.fatherPhone = normalizePhoneNumber(student.fatherPhone);
         student.motherPhone = normalizePhoneNumber(student.motherPhone);
+        // TODO edit normalize static number
         student.staticPhone = normalizePhoneNumber(student.staticPhone); // Normalize static phone
       },
     },
   }
 );
 
-// Function to normalize Iranian phone numbers
+// Normalize Iranian phone numbers
 function normalizePhoneNumber(phone) {
   phone = phone.replace(/\D/g, '');
   if (phone.startsWith('98')) {

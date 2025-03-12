@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { StatusCodes } from 'http-status-codes';
-import { Sequelize } from 'sequelize'; // Import Sequelize for error detection
+import { Sequelize } from 'sequelize'; // Import Sequelize for error handling
+
 config();
 
 class ErrorHandler {
@@ -27,10 +28,13 @@ class ErrorHandler {
         return next(err);
       }
 
-      // Handle Sequelize Unique Constraint Error
+      let statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+      let message = err.message || 'Internal Server Error';
+
+      // ✅ Handle Sequelize Unique Constraint Error
       if (err instanceof Sequelize.UniqueConstraintError) {
-        const field = err.errors[0].path; // Get the field that caused the violation
-        const message = `${field} must be unique`;
+        const field = err.errors?.[0]?.path || 'Field';
+        message = `${field} must be unique`;
 
         return res.status(StatusCodes.BAD_REQUEST).json({
           success: false,
@@ -40,15 +44,36 @@ class ErrorHandler {
         });
       }
 
-      // Handle other types of errors
-      const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-      const message = err.message || 'Internal Server Error';
+      // ✅ Handle Sequelize Foreign Key Constraint Error
+      if (err instanceof Sequelize.ForeignKeyConstraintError) {
+        message = `Invalid foreign key: The referenced field does not exist or has been deleted`;
 
-      // Log errors in development
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          statusCode: StatusCodes.BAD_REQUEST,
+          message: 'Foreign key constraint violation',
+          error: message,
+        });
+      }
+
+      // ✅ Handle Sequelize Validation Errors
+      if (err instanceof Sequelize.ValidationError) {
+        message = err.errors.map((e) => e.message).join(', ');
+
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          statusCode: StatusCodes.BAD_REQUEST,
+          message: 'Validation error',
+          error: message,
+        });
+      }
+
+      // ✅ Log errors in development mode
       if (process.env.NODE_ENV !== 'production') {
         console.error(err);
       }
 
+      // ✅ General Error Handling
       res.status(statusCode).json({
         success: false,
         statusCode,

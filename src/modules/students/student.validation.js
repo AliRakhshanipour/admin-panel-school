@@ -90,4 +90,10 @@ export const studentValidationRules = [
   body('disciplineMark')
     .isFloat({ min: 0, max: 20 })
     .withMessage('Discipline mark must be between 0 and 20'),
+
+  body('subFieldId')
+    .isInt({ min: 1 })
+    .withMessage('Sub Field ID must be a positive integer')
+    .notEmpty()
+    .withMessage('Sub Field ID is required'),
 ];

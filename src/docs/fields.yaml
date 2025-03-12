@@ -1,0 +1,244 @@
+openapi: 3.0.0
+info:
+  title: Field API
+  description: API documentation for managing fields in the system
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local server
+
+paths:
+  /fields:
+    post:
+      summary: Create a new field
+      description: Adds a new field to the system.
+      tags:
+        - Fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+      responses:
+        201:
+          description: Field created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Field created successfully"
+                  data:
+                    $ref: '#/components/schemas/FieldResponse'
+        400:
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get all fields
+      description: Retrieves a list of all fields in the system.
+      tags:
+        - Fields
+      responses:
+        200:
+          description: Successfully retrieved fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Fields retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FieldResponse'
+
+  /fields/{fieldId}:
+    get:
+      summary: Get a field by ID
+      description: Fetches a field using its unique ID.
+      tags:
+        - Fields
+      parameters:
+        - name: fieldId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the field to retrieve
+      responses:
+        200:
+          description: Field retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Field retrieved successfully"
+                  data:
+                    $ref: '#/components/schemas/FieldResponse'
+        404:
+          description: Field not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a field by ID
+      description: Modifies an existing field using its ID.
+      tags:
+        - Fields
+      parameters:
+        - name: fieldId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the field to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FieldRequest'
+      responses:
+        200:
+          description: Field updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Field updated successfully"
+                  data:
+                    $ref: '#/components/schemas/FieldResponse'
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Field not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a field by ID
+      description: Removes a field from the system.
+      tags:
+        - Fields
+      parameters:
+        - name: fieldId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the field to delete
+      responses:
+        200:
+          description: Field deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Field deleted successfully"
+        404:
+          description: Field not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    FieldRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Physics"
+        description:
+          type: string
+          example: "Study of matter, energy, and their interactions"
+        parentId:
+          type: integer
+          example: 2
+      required:
+        - name
+
+    FieldResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Physics"
+        description:
+          type: string
+          example: "Study of matter, energy, and their interactions"
+        parentId:
+          type: integer
+          nullable: true
+          example: 2
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation error"
+        error:
+          type: string
+          example: "Field name is required"

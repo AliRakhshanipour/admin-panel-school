@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Student API
-  description: API documentation for the Student Management System
+  description: API documentation for managing students in the Student Management System
   version: 1.0.0
 
 servers:
@@ -70,7 +70,7 @@ paths:
           description: Student ID
       responses:
         200:
-          description: Student data retrieved
+          description: Student retrieved successfully
           content:
             application/json:
               schema:
@@ -129,15 +129,16 @@ components:
     Student:
       type: object
       properties:
-        studentCode:
-          type: string
-          example: "12345"
         firstName:
           type: string
           example: John
         lastName:
           type: string
           example: Doe
+        studentCode:
+          type: string
+          unique: true
+          example: STU12345
         phone:
           type: string
           example: "09123456789"
@@ -146,13 +147,14 @@ components:
           example: "02123456789"
         nationalCode:
           type: string
+          unique: true
+          minLength: 10
+          maxLength: 10
           example: "1234567890"
         nationality:
           type: string
-          enum:
-            - ایران
-            - توابع
-          example: ایران
+          enum: ["ایران", "توابع"]
+          example: "ایران"
         dropOutSchool:
           type: boolean
           example: false
@@ -165,7 +167,7 @@ components:
           example: male
         fatherName:
           type: string
-          example: Ali Doe
+          example: "Ali Doe"
         fatherPhone:
           type: string
           example: "09123456789"
@@ -180,7 +182,7 @@ components:
           example: 16
         field:
           type: string
-          example: Computer Science
+          example: "Computer Science"
         status:
           type: string
           enum: [active, inactive]
@@ -203,3 +205,7 @@ components:
           type: number
           format: float
           example: 20.0
+        subFieldId:
+          type: integer
+          description: The ID of the related field (subField)
+          example: 3
