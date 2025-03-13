@@ -13,34 +13,32 @@ const Student = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'First name is required' },
       },
     },
     lastName: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Last name is required' },
       },
     },
     studentCode: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // Ensure studentCode is unique for each student
+      unique: true,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Student code is required' },
       },
     },
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Phone number is required' },
         isValidPhoneNumber(value) {
-          try {
-            normalizePhoneNumber(value);
-          } catch (error) {
-            throw new Error('Phone number must be a valid Iranian number');
+          if (!isValidIranianPhone(value)) {
+            throw new Error('Invalid Iranian mobile phone number');
           }
         },
       },
@@ -49,14 +47,10 @@ const Student = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
-        isValidPhoneNumber(value) {
-          try {
-            normalizePhoneNumber(value);
-          } catch (error) {
-            throw new Error(
-              'Static phone number must be a valid Iranian number'
-            );
+        notEmpty: { msg: 'Static phone number is required' },
+        isValidStaticPhoneNumber(value) {
+          if (!isValidIranianStaticPhone(value)) {
+            throw new Error('Invalid Iranian landline number');
           }
         },
       },
@@ -64,11 +58,11 @@ const Student = sequelize.define(
     nationalCode: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // Ensure nationalCode is unique for each student
+      unique: true,
       validate: {
-        notEmpty: true,
-        len: [10, 10], // Iranian national code is exactly 10 digits
-        isNumeric: true,
+        notEmpty: { msg: 'National code is required' },
+        len: { args: [10, 10], msg: 'National code must be exactly 10 digits' },
+        isNumeric: { msg: 'National code must contain only numbers' },
       },
     },
     nationality: {
@@ -83,35 +77,28 @@ const Student = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Address is required' },
       },
     },
     gender: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM('male', 'female', 'other'),
       allowNull: false,
-      validate: {
-        isIn: [['male', 'female', 'other']],
-      },
     },
     fatherName: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Father name is required' },
       },
     },
     fatherPhone: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Father phone number is required' },
         isValidPhoneNumber(value) {
-          try {
-            normalizePhoneNumber(value);
-          } catch (error) {
-            throw new Error(
-              'Father phone number must be a valid Iranian number'
-            );
+          if (!isValidIranianPhone(value)) {
+            throw new Error('Invalid Iranian mobile phone number');
           }
         },
       },
@@ -120,14 +107,10 @@ const Student = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Mother phone number is required' },
         isValidPhoneNumber(value) {
-          try {
-            normalizePhoneNumber(value);
-          } catch (error) {
-            throw new Error(
-              'Mother phone number must be a valid Iranian number'
-            );
+          if (!isValidIranianPhone(value)) {
+            throw new Error('Invalid Iranian mobile phone number');
           }
         },
       },
@@ -136,23 +119,23 @@ const Student = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        isInt: true,
-        min: 0,
+        isInt: { msg: 'Siblings number must be an integer' },
+        min: { args: [0], msg: 'Siblings number cannot be negative' },
       },
     },
     age: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        isInt: true,
-        min: 0,
+        isInt: { msg: 'Age must be an integer' },
+        min: { args: [0], msg: 'Age cannot be negative' },
       },
     },
     field: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Field is required' },
       },
     },
     status: {
@@ -167,43 +150,25 @@ const Student = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: { msg: 'Last school is required' },
       },
     },
     lastYearAverage: {
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        isFloat: true,
-        min: 0,
-        max: 20,
-      },
-    },
-    mathMark: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        isFloat: true,
-        min: 0,
-        max: 20,
-      },
-    },
-    disciplineMark: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        isFloat: true,
-        min: 0,
-        max: 20,
+        isFloat: { msg: 'Last year average must be a number' },
+        min: { args: [0], msg: 'Minimum value is 0' },
+        max: { args: [20], msg: 'Maximum value is 20' },
       },
     },
     subFieldId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: 'fields', // references the 'Field' model
+        model: 'fields',
         key: 'id',
       },
-      allowNull: false,
     },
   },
   {
@@ -212,36 +177,65 @@ const Student = sequelize.define(
     updatedAt: 'updated_at',
     underscored: true,
     hooks: {
-      beforeCreate: (student) => {
-        student.phone = normalizePhoneNumber(student.phone);
-        student.fatherPhone = normalizePhoneNumber(student.fatherPhone);
-        student.motherPhone = normalizePhoneNumber(student.motherPhone);
-        student.staticPhone = normalizePhoneNumber(student.staticPhone); // Normalize static phone
-      },
-      beforeUpdate: (student) => {
-        student.phone = normalizePhoneNumber(student.phone);
-        student.fatherPhone = normalizePhoneNumber(student.fatherPhone);
-        student.motherPhone = normalizePhoneNumber(student.motherPhone);
-        // TODO edit normalize static number
-        student.staticPhone = normalizePhoneNumber(student.staticPhone); // Normalize static phone
-      },
+      beforeCreate: normalizePhones,
+      beforeUpdate: normalizePhones,
     },
   }
 );
 
-// Normalize Iranian phone numbers
-function normalizePhoneNumber(phone) {
+// Iranian Phone Number Validation
+function isValidIranianPhone(phone) {
   phone = phone.replace(/\D/g, '');
-  if (phone.startsWith('98')) {
-    phone = '0' + phone.slice(2);
-  } else if (phone.startsWith('9')) {
-    phone = '0' + phone;
-  }
-  if (/^0\d{10}$/.test(phone)) {
-    return phone;
-  } else {
-    throw new Error('Invalid phone number format');
-  }
+  return /^09\d{9}$/.test(phone);
+}
+
+// Iranian Static Phone Number Validation
+const provinceCodes = [
+  '021',
+  '026',
+  '025',
+  '086',
+  '031',
+  '044',
+  '011',
+  '076',
+  '077',
+  '045',
+  '034',
+  '017',
+  '041',
+  '058',
+  '056',
+  '024',
+  '066',
+  '028',
+  '038',
+  '084',
+  '071',
+  '051',
+  '061',
+  '023',
+  '035',
+  '083',
+  '074',
+  '054',
+  '087',
+  '081',
+  '048',
+];
+
+function isValidIranianStaticPhone(phone) {
+  phone = phone.replace(/\D/g, '');
+  if (phone.length !== 11) return false;
+  return provinceCodes.includes(phone.slice(0, 3));
+}
+
+// Normalize Phone Numbers Before Saving
+function normalizePhones(student) {
+  student.phone = student.phone.replace(/\D/g, '');
+  student.fatherPhone = student.fatherPhone.replace(/\D/g, '');
+  student.motherPhone = student.motherPhone.replace(/\D/g, '');
+  student.staticPhone = student.staticPhone.replace(/\D/g, '');
 }
 
 export { Student };

@@ -43,12 +43,73 @@ paths:
           description: Validation error
 
     get:
-      summary: Get all students
+      summary: Get all students with optional filtering
       tags:
         - Students
+      parameters:
+        - name: first_name
+          in: query
+          schema:
+            type: string
+          description: Filter students by first name
+        - name: last_name
+          in: query
+          schema:
+            type: string
+          description: Filter students by last name
+        - name: student_code
+          in: query
+          schema:
+            type: string
+          description: Filter students by student code
+        - name: national_code
+          in: query
+          schema:
+            type: string
+          description: Filter students by national code
+        - name: gender
+          in: query
+          schema:
+            type: string
+            enum: [male, female, other]
+          description: Filter students by gender
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+          description: Filter students by status
+        - name: graduated
+          in: query
+          schema:
+            type: boolean
+          description: Filter students by graduation status
+        - name: min_age
+          in: query
+          schema:
+            type: integer
+          description: Filter students by minimum age
+        - name: max_age
+          in: query
+          schema:
+            type: integer
+          description: Filter students by maximum age
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of students per page
+
       responses:
         200:
-          description: A list of students
+          description: A list of students based on filters
           content:
             application/json:
               schema:
@@ -106,7 +167,6 @@ paths:
           description: Student updated successfully
         404:
           description: Student not found
-
     delete:
       summary: Delete a student by ID
       tags:
@@ -123,6 +183,66 @@ paths:
           description: Student deleted successfully
         404:
           description: Student not found
+
+  /students/graduated-status/{id}:
+    patch:
+      summary: Update a student graduation status by ID
+      tags:
+        - Students
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Graduated'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Graduated'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Graduated'
+      responses:
+        200:
+          description: Student graduation status updated successfully
+        404:
+          description: Student not found
+  /students/change-field/{id}:
+    patch:
+      summary: Update a student field by ID
+      tags:
+        - Students
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeField'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeField'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeField'
+      responses:
+        200:
+          description: Student graduation status updated successfully
+        404:
+          description: Student not found
+
 
 components:
   schemas:
@@ -205,6 +325,20 @@ components:
           type: number
           format: float
           example: 20.0
+        subFieldId:
+          type: integer
+          description: The ID of the related field (subField)
+          example: 3
+    Graduated:
+      type: object
+      properties:
+        graduated:
+          type: boolean
+          example: false
+    
+    ChangeField:
+      type: object
+      properties:
         subFieldId:
           type: integer
           description: The ID of the related field (subField)

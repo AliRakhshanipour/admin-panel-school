@@ -97,3 +97,15 @@ export const studentValidationRules = [
     .notEmpty()
     .withMessage('Sub Field ID is required'),
 ];
+
+export const studentGraduatedStatusRules = [
+  body('graduated').isBoolean().withMessage('Graduated must be a boolean'),
+];
+
+export const studentChangeFieldRules = [
+  body('subFieldId')
+    .isInt({ min: 1 })
+    .withMessage('Sub Field ID must be a positive integer')
+    .notEmpty()
+    .withMessage('Sub Field ID is required'),
+];

@@ -5,8 +5,14 @@ import {
   getStudentByIdHandler,
   updateStudentByIdHandler,
   deleteStudentByIdHandler,
+  graduateStudentHandler,
+  changeStudentFieldHandler,
 } from './student.service.js';
-import { studentValidationRules } from './student.validation.js';
+import {
+  studentChangeFieldRules,
+  studentGraduatedStatusRules,
+  studentValidationRules,
+} from './student.validation.js';
 import { validate } from '../../middlewares/validate.js';
 
 const router = Router();
@@ -33,6 +39,18 @@ const routes = [
     path: '/:id',
     handler: updateStudentByIdHandler,
     middleware: [studentValidationRules, validate],
+  },
+  {
+    method: 'patch',
+    path: '/graduated-status/:id',
+    handler: graduateStudentHandler,
+    middleware: [studentGraduatedStatusRules, validate],
+  },
+  {
+    method: 'patch',
+    path: '/change-field/:id',
+    handler: changeStudentFieldHandler,
+    middleware: [studentChangeFieldRules, validate],
   },
   {
     method: 'delete',
