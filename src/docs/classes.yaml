@@ -12,7 +12,7 @@ paths:
   /classes:
     post:
       summary: Create a new class
-      description: Adds a new class to the system.
+      description: Adds a new class to the system with validated input.
       tags:
         - Classes
       requestBody:
@@ -142,9 +142,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-    put:
+    patch:
       summary: Update a class by ID
-      description: Modifies an existing class using its ID (placeholder for future implementation).
+      description: Partially updates an existing class using its ID.
       tags:
         - Classes
       parameters:
@@ -183,7 +183,7 @@ paths:
                   class:
                     $ref: '#/components/schemas/ClassResponse'
         '400':
-          description: Validation error
+          description: Validation error or invalid ID
           content:
             application/json:
               schema:
@@ -197,7 +197,7 @@ paths:
 
     delete:
       summary: Delete a class by ID
-      description: Removes a class from the system (placeholder for future implementation).
+      description: Removes a class from the system if it has no enrolled students.
       tags:
         - Classes
       parameters:
@@ -221,6 +221,12 @@ paths:
                   message:
                     type: string
                     example: "Class deleted successfully"
+        '400':
+          description: Invalid ID or class has enrolled students
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Class not found
           content:
@@ -342,12 +348,9 @@ components:
         id:
           type: integer
           example: 1
-        firstName:
+        fullName:
           type: string
-          example: "Ali"
-        lastName:
-          type: string
-          example: "Rakhshanipur"
+          example: "Ali Rakhshanipur"
         studentCode:
           type: string
           example: "STU12345"
