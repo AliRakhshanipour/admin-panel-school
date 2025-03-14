@@ -12,6 +12,10 @@ export const Field = sequelize.define(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: { msg: 'Field name cannot be empty' },
+      },
+      unique: { msg: 'Field name must be unique' },
     },
     description: {
       type: DataTypes.TEXT,

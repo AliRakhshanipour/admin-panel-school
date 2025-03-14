@@ -7,6 +7,9 @@ const studentDocs = YAML.load(
   path.join(process.cwd(), '/src/docs/students.yaml')
 );
 const fieldsDocs = YAML.load(path.join(process.cwd(), '/src/docs/fields.yaml'));
+const classesDocs = YAML.load(
+  path.join(process.cwd(), '/src/docs/classes.yaml')
+);
 
 // Base Swagger definition
 const baseSwagger = {
@@ -25,16 +28,17 @@ const baseSwagger = {
   paths: {
     ...studentDocs.paths,
     ...fieldsDocs.paths,
+    ...classesDocs.paths,
   },
   components: {
     schemas: {
       ...studentDocs.components.schemas,
       ...fieldsDocs.components.schemas,
+      ...classesDocs.components.schemas,
     },
   },
 };
 
-// Function to set up Swagger in Express app
 const setupSwagger = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(baseSwagger));
 };

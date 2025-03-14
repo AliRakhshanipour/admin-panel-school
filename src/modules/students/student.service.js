@@ -28,8 +28,6 @@ export async function getAllStudentsHandler(req, res, next) {
       ? (parseInt(req.query.page, 10) - 1) * limit
       : 0;
 
-    console.log('Request Query:', req.query); // Debugging log
-
     const {
       first_name,
       last_name,

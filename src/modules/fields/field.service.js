@@ -101,4 +101,5 @@ export async function checkFieldExists(id) {
   if (!field) {
     throw createHttpError.NotFound(`Field with id ${id} does not exist`);
   }
+  return field;
 }

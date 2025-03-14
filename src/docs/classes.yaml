@@ -1,0 +1,380 @@
+openapi: 3.0.0
+info:
+  title: Class API
+  description: API documentation for managing classes and their students in the system
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+paths:
+  /classes:
+    post:
+      summary: Create a new class
+      description: Adds a new class to the system.
+      tags:
+        - Classes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+      responses:
+        '201':
+          description: Class created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Class created successfully"
+                  class:
+                    $ref: '#/components/schemas/ClassResponse'
+        '400':
+          description: Bad request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get all classes
+      description: Retrieves a paginated list of all classes with optional filtering by number and name.
+      tags:
+        - Classes
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of classes per page
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number to retrieve
+        - name: number
+          in: query
+          schema:
+            type: integer
+          description: Filter by exact class number
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by partial class name match (case-insensitive)
+      responses:
+        '200':
+          description: Successfully retrieved classes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Classes fetched successfully"
+                  total:
+                    type: integer
+                    example: 25
+                  classes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassResponse'
+
+  /classes/{classId}:
+    get:
+      summary: Get a class by ID
+      description: Fetches details of a specific class using its unique ID.
+      tags:
+        - Classes
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the class to retrieve
+      responses:
+        '200':
+          description: Class retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Class retrieved successfully"
+                  class:
+                    $ref: '#/components/schemas/ClassResponse'
+        '400':
+          description: Invalid class ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a class by ID
+      description: Modifies an existing class using its ID (placeholder for future implementation).
+      tags:
+        - Classes
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the class to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+      responses:
+        '200':
+          description: Class updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Class updated successfully"
+                  class:
+                    $ref: '#/components/schemas/ClassResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a class by ID
+      description: Removes a class from the system (placeholder for future implementation).
+      tags:
+        - Classes
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the class to delete
+      responses:
+        '200':
+          description: Class deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Class deleted successfully"
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /classes/{classId}/students:
+    get:
+      summary: Get students of a class
+      description: Retrieves a paginated list of students enrolled in a specific class.
+      tags:
+        - Classes
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the class to retrieve students for
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of students per page
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number to retrieve
+      responses:
+        '200':
+          description: Successfully retrieved students
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Students retrieved successfully"
+                  total:
+                    type: integer
+                    example: 15
+                  students:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Invalid class ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ClassRequest:
+      type: object
+      properties:
+        number:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: "CS101"
+        description:
+          type: string
+          example: "Introduction to Computer Science"
+        capacity:
+          type: integer
+          example: 30
+      required:
+        - number
+        - name
+        - capacity
+
+    ClassResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        number:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: "CS101"
+        description:
+          type: string
+          nullable: true
+          example: "Introduction to Computer Science"
+        capacity:
+          type: integer
+          example: 30
+        enrolledStudents:
+          type: integer
+          example: 15
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-03-13T10:00:00Z"
+
+    StudentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Rakhshanipur"
+        studentCode:
+          type: string
+          example: "STU12345"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-03-13T10:00:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Invalid class ID"
+        error:
+          type: string
+          example: "BadRequest"
+        stack:
+          type: string
+          example: "Error stack trace..."
+      required:
+        - success
+        - statusCode
+        - message

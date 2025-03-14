@@ -8,6 +8,7 @@ import { studentRouter } from './src/modules/students/student.routes.js';
 import { ErrorHandler } from './src/common/error.handler.js';
 import { setupSwagger } from './src/configs/swagger.config.js';
 import { fieldRouter } from './src/modules/fields/field.routes.js';
+import { classRouter } from './src/modules/class/class.routes.js';
 
 const bootstrap = async () => {
   const app = express();
@@ -19,6 +20,7 @@ const bootstrap = async () => {
   setupSwagger(app);
   app.use('/students', studentRouter);
   app.use('/fields', fieldRouter);
+  app.use('/classes', classRouter);
   await initialDB();
   await authenticateDB();
 

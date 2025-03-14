@@ -170,6 +170,16 @@ const Student = sequelize.define(
         key: 'id',
       },
     },
+    // ... (existing fields like id, firstName, etc.)
+    classId: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Changed to true so class is optional at signup
+      references: {
+        model: 'classes',
+        key: 'id',
+      },
+      onDelete: 'SET NULL', // If a class is deleted, set classId to null
+    },
   },
   {
     tableName: 'students',
