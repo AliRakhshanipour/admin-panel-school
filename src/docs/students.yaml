@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Student API
-  description: API documentation for managing students in the Student Management System
+  description: API documentation for managing students in the School Management System
   version: 1.0.0
 
 servers:
@@ -12,6 +12,7 @@ paths:
   /students:
     post:
       summary: Create a new student
+      description: Adds a new student to the system with optional subField assignment.
       tags:
         - Students
       requestBody:
@@ -19,31 +20,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
       responses:
-        201:
+        '201':
           description: Student created successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: true
                   message:
                     type: string
-                    example: Student created successfully
+                    example: "Student created successfully"
                   student:
-                    $ref: '#/components/schemas/Student'
-        400:
-          description: Validation error
+                    $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Validation error or invalid subFieldId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
-      summary: Get all students with optional filtering
+      summary: Get all students
+      description: Retrieves a paginated list of students with optional filtering by various attributes.
       tags:
         - Students
       parameters:
@@ -51,49 +60,49 @@ paths:
           in: query
           schema:
             type: string
-          description: Filter students by first name
+          description: Filter by partial first name match (case-insensitive)
         - name: last_name
           in: query
           schema:
             type: string
-          description: Filter students by last name
+          description: Filter by partial last name match (case-insensitive)
         - name: student_code
           in: query
           schema:
             type: string
-          description: Filter students by student code
+          description: Filter by exact student code
         - name: national_code
           in: query
           schema:
             type: string
-          description: Filter students by national code
+          description: Filter by exact national code
         - name: gender
           in: query
           schema:
             type: string
             enum: [male, female, other]
-          description: Filter students by gender
+          description: Filter by gender
         - name: status
           in: query
           schema:
             type: string
             enum: [active, inactive]
-          description: Filter students by status
+          description: Filter by status
         - name: graduated
           in: query
           schema:
             type: boolean
-          description: Filter students by graduation status
+          description: Filter by graduation status (true/false)
         - name: min_age
           in: query
           schema:
             type: integer
-          description: Filter students by minimum age
+          description: Filter by minimum age (inclusive)
         - name: max_age
           in: query
           schema:
             type: integer
-          description: Filter students by maximum age
+          description: Filter by maximum age (inclusive)
         - name: page
           in: query
           schema:
@@ -106,176 +115,330 @@ paths:
             type: integer
             default: 10
           description: Number of students per page
-
       responses:
-        200:
-          description: A list of students based on filters
+        '200':
+          description: Successfully retrieved students
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Student'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Students fetched successfully"
+                  total:
+                    type: integer
+                    example: 50
+                  students:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StudentListResponse'
 
-  /students/{id}:
+  /students/{studentId}:
     get:
-      summary: Get student by ID
+      summary: Get a student by ID
+      description: Fetches detailed information about a specific student, including their subField.
       tags:
         - Students
       parameters:
-        - name: id
+        - name: studentId
           in: path
           required: true
           schema:
             type: integer
-          description: Student ID
+          description: ID of the student to retrieve
       responses:
-        200:
+        '200':
           description: Student retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Student'
-        404:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Student fetched successfully"
+                  student:
+                    $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Invalid student ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-    put:
+    patch:
       summary: Update a student by ID
+      description: Partially updates a student's information.
       tags:
         - Students
       parameters:
-        - name: id
+        - name: studentId
           in: path
           required: true
           schema:
             type: integer
-          description: Student ID
+          description: ID of the student to update
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Student'
+              $ref: '#/components/schemas/StudentRequest'
       responses:
-        200:
+        '200':
           description: Student updated successfully
-        404:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Student updated successfully"
+                  student:
+                    $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Invalid student ID or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     delete:
       summary: Delete a student by ID
+      description: Removes a student from the system.
       tags:
         - Students
       parameters:
-        - name: id
+        - name: studentId
           in: path
           required: true
           schema:
             type: integer
-          description: Student ID
+          description: ID of the student to delete
       responses:
-        200:
+        '200':
           description: Student deleted successfully
-        404:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Student deleted successfully"
+        '400':
+          description: Invalid student ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /students/graduated-status/{id}:
+  /students/{studentId}/graduate:
     patch:
-      summary: Update a student graduation status by ID
+      summary: Update student graduation status
+      description: Changes the graduation status of a student.
       tags:
         - Students
       parameters:
-        - name: id
+        - name: studentId
           in: path
           required: true
           schema:
             type: integer
-          description: Student ID
+          description: ID of the student to update
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Graduated'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Graduated'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Graduated'
+              $ref: '#/components/schemas/GraduatedRequest'
       responses:
-        200:
-          description: Student graduation status updated successfully
-        404:
+        '200':
+          description: Graduation status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Graduated status changed to true"
+        '400':
+          description: Invalid student ID or graduated value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Student not found
-  /students/change-field/{id}:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /students/{studentId}/field:
     patch:
-      summary: Update a student field by ID
+      summary: Change student field
+      description: Updates the subField assignment for a student.
       tags:
         - Students
       parameters:
-        - name: id
+        - name: studentId
           in: path
           required: true
           schema:
             type: integer
-          description: Student ID
+          description: ID of the student to update
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangeField'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ChangeField'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ChangeField'
+              $ref: '#/components/schemas/ChangeFieldRequest'
       responses:
-        200:
-          description: Student graduation status updated successfully
-        404:
+        '200':
+          description: Student field changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Student's field changed to 3"
+        '400':
+          description: Invalid student ID or subFieldId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
           description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
+  /students/{studentId}/class:
+    patch:
+      summary: Assign student to a class
+      description: Assigns a student to a specified class, checking for existing class assignment and capacity.
+      tags:
+        - Students
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the student to assign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassAssignmentRequest'
+      responses:
+        '200':
+          description: Student assigned to class successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Student assigned to class with ID 1 successfully"
+                  student:
+                    $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Invalid ID, student already in a class, or class at capacity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Student or class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
-    Student:
+    StudentRequest:
       type: object
       properties:
-        firstName:
+        first_name:
           type: string
-          example: John
-        lastName:
+          example: "John"
+        last_name:
           type: string
-          example: Doe
-        studentCode:
+          example: "Doe"
+        student_code:
           type: string
-          unique: true
-          example: STU12345
+          example: "STU12345"
         phone:
           type: string
           example: "09123456789"
-        staticPhone:
+        static_phone:
           type: string
           example: "02123456789"
-        nationalCode:
+        national_code:
           type: string
-          unique: true
-          minLength: 10
-          maxLength: 10
           example: "1234567890"
         nationality:
           type: string
           enum: ["ایران", "توابع"]
           example: "ایران"
-        dropOutSchool:
+        drop_out_school:
           type: boolean
           example: false
         address:
@@ -283,18 +446,18 @@ components:
           example: "Tehran, Iran"
         gender:
           type: string
-          enum: [male, female, other]
-          example: male
-        fatherName:
+          enum: ["male", "female", "other"]
+          example: "male"
+        father_name:
           type: string
           example: "Ali Doe"
-        fatherPhone:
+        father_phone:
           type: string
           example: "09123456789"
-        motherPhone:
+        mother_phone:
           type: string
           example: "09123456789"
-        siblingsNumber:
+        siblings_number:
           type: integer
           example: 2
         age:
@@ -305,41 +468,182 @@ components:
           example: "Computer Science"
         status:
           type: string
-          enum: [active, inactive]
-          example: active
+          enum: ["active", "inactive"]
+          example: "active"
         graduated:
           type: boolean
           example: false
-        lastSchool:
+        last_school:
           type: string
           example: "Tehran High School"
-        lastYearAverage:
+        last_year_average:
           type: number
           format: float
           example: 18.5
-        mathMark:
+        math_mark:
           type: number
           format: float
           example: 19.0
-        disciplineMark:
+        discipline_mark:
           type: number
           format: float
           example: 20.0
-        subFieldId:
+        sub_field_id:
           type: integer
-          description: The ID of the related field (subField)
           example: 3
-    Graduated:
+          description: ID of the related subField
+
+    StudentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        student_code:
+          type: string
+          example: "STU12345"
+        phone:
+          type: string
+          example: "09123456789"
+        static_phone:
+          type: string
+          example: "02123456789"
+        national_code:
+          type: string
+          example: "1234567890"
+        nationality:
+          type: string
+          example: "ایران"
+        drop_out_school:
+          type: boolean
+          example: false
+        address:
+          type: string
+          example: "Tehran, Iran"
+        gender:
+          type: string
+          example: "male"
+        father_name:
+          type: string
+          example: "Ali Doe"
+        father_phone:
+          type: string
+          example: "09123456789"
+        mother_phone:
+          type: string
+          example: "09123456789"
+        siblings_number:
+          type: integer
+          example: 2
+        age:
+          type: integer
+          example: 16
+        field:
+          type: string
+          example: "Computer Science"
+        status:
+          type: string
+          example: "active"
+        graduated:
+          type: boolean
+          example: false
+        last_school:
+          type: string
+          example: "Tehran High School"
+        last_year_average:
+          type: number
+          example: 18.5
+        math_mark:
+          type: number
+          example: 19.0
+        discipline_mark:
+          type: number
+          example: 20.0
+        sub_field_id:
+          type: integer
+          example: 3
+        class_id:
+          type: integer
+          example: 1
+          description: ID of the assigned class
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-03-14T10:00:00Z"
+        subField:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Software Engineering"
+
+    StudentListResponse:
+      type: object
+      properties:
+        full_name:
+          type: string
+          example: "John Doe"
+        student_code:
+          type: string
+          example: "STU12345"
+        national_code:
+          type: string
+          example: "1234567890"
+
+    GraduatedRequest:
       type: object
       properties:
         graduated:
           type: boolean
-          example: false
-    
-    ChangeField:
+          example: true
+      required:
+        - graduated
+
+    ChangeFieldRequest:
       type: object
       properties:
-        subFieldId:
+        sub_field_id:
           type: integer
-          description: The ID of the related field (subField)
           example: 3
+          description: ID of the new subField
+      required:
+        - sub_field_id
+
+    ClassAssignmentRequest:
+      type: object
+      properties:
+        class_id:
+          type: integer
+          example: 1
+          description: ID of the class to assign the student to
+      required:
+        - class_id
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Invalid student ID"
+        error:
+          type: string
+          example: "BadRequest"
+        stack:
+          type: string
+          example: "Error stack trace..."
+      required:
+        - success
+        - statusCode
+        - message

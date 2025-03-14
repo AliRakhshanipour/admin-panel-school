@@ -10,6 +10,9 @@ const fieldsDocs = YAML.load(path.join(process.cwd(), '/src/docs/fields.yaml'));
 const classesDocs = YAML.load(
   path.join(process.cwd(), '/src/docs/classes.yaml')
 );
+const teachersDocs = YAML.load(
+  path.join(process.cwd(), '/src/docs/teachers.yaml')
+);
 
 // Base Swagger definition
 const baseSwagger = {
@@ -29,12 +32,14 @@ const baseSwagger = {
     ...studentDocs.paths,
     ...fieldsDocs.paths,
     ...classesDocs.paths,
+    ...teachersDocs.paths,
   },
   components: {
     schemas: {
       ...studentDocs.components.schemas,
       ...fieldsDocs.components.schemas,
       ...classesDocs.components.schemas,
+      ...teachersDocs.components.schemas,
     },
   },
 };

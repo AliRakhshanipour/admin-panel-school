@@ -1,0 +1,432 @@
+openapi: 3.0.0
+info:
+  title: Teacher API
+  description: API documentation for managing teachers in the School Management System
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local server
+
+paths:
+  /teachers:
+    post:
+      summary: Create a new teacher
+      description: Adds a new teacher to the system with required fields like teacher code and phone number.
+      tags:
+        - Teachers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+      responses:
+        '201':
+          description: Teacher created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teacher created successfully"
+                  teacher:
+                    $ref: '#/components/schemas/TeacherResponse'
+        '400':
+          description: Validation error or duplicate teacher code/email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get all teachers
+      description: Retrieves a paginated list of teachers with optional filtering by name, code, or status.
+      tags:
+        - Teachers
+      parameters:
+        - name: first_name
+          in: query
+          schema:
+            type: string
+          description: Filter by partial first name match (case-insensitive)
+        - name: last_name
+          in: query
+          schema:
+            type: string
+          description: Filter by partial last name match (case-insensitive)
+        - name: teacher_code
+          in: query
+          schema:
+            type: string
+          description: Filter by exact teacher code
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+          description: Filter by teacher status
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of teachers per page
+      responses:
+        '200':
+          description: Successfully retrieved teachers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teachers fetched successfully"
+                  total:
+                    type: integer
+                    example: 20
+                  teachers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeacherListResponse'
+
+  /teachers/{teacherId}:
+    get:
+      summary: Get a teacher by ID
+      description: Fetches detailed information about a specific teacher.
+      tags:
+        - Teachers
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the teacher to retrieve
+      responses:
+        '200':
+          description: Teacher retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teacher fetched successfully"
+                  teacher:
+                    $ref: '#/components/schemas/TeacherResponse'
+        '400':
+          description: Invalid teacher ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update a teacher by ID
+      description: Partially updates a teacher's information.
+      tags:
+        - Teachers
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the teacher to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherRequest'
+      responses:
+        '200':
+          description: Teacher updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teacher updated successfully"
+                  teacher:
+                    $ref: '#/components/schemas/TeacherResponse'
+        '400':
+          description: Invalid teacher ID or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a teacher by ID
+      description: Removes a teacher from the system, prevented if they have assigned schedules.
+      tags:
+        - Teachers
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the teacher to delete
+      responses:
+        '200':
+          description: Teacher deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teacher deleted successfully"
+        '400':
+          description: Invalid teacher ID or teacher has assigned schedules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /teachers/{teacherId}/schedule:
+    get:
+      summary: Get a teacher's schedule
+      description: Retrieves the weekly schedule for a specific teacher, including class details.
+      tags:
+        - Teachers
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the teacher whose schedule is to be retrieved
+      responses:
+        '200':
+          description: Teacher schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Teacher schedule retrieved successfully"
+                  schedules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScheduleResponse'
+        '400':
+          description: Invalid teacher ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Teacher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TeacherRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Sara"
+          description: "Teacher's first name"
+        last_name:
+          type: string
+          example: "Ahmadi"
+          description: "Teacher's last name"
+        teacher_code:
+          type: string
+          example: "TCH12345"
+          description: "Unique code assigned to the teacher"
+        phone:
+          type: string
+          example: "09123456789"
+          description: "Teacher's phone number (Iranian mobile format)"
+        email:
+          type: string
+          example: "sara.ahmadi@example.com"
+          description: "Teacher's email address (optional)"
+        status:
+          type: string
+          enum: ["active", "inactive"]
+          example: "active"
+          description: "Teacher's current status"
+      required:
+        - first_name
+        - last_name
+        - teacher_code
+        - phone
+        - status
+
+    TeacherResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: "Sara"
+        last_name:
+          type: string
+          example: "Ahmadi"
+        teacher_code:
+          type: string
+          example: "TCH12345"
+        phone:
+          type: string
+          example: "09123456789"
+        email:
+          type: string
+          example: "sara.ahmadi@example.com"
+          nullable: true
+        status:
+          type: string
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-03-14T10:00:00Z"
+
+    TeacherListResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        full_name:
+          type: string
+          example: "Sara Ahmadi"
+        teacher_code:
+          type: string
+          example: "TCH12345"
+        phone:
+          type: string
+          example: "09123456789"
+        status:
+          type: string
+          example: "active"
+
+    ScheduleResponse:
+      type: object
+      properties:
+        day_of_week:
+          type: integer
+          example: 1
+          description: "Day of the week (0=Sunday, 6=Saturday)"
+        start_time:
+          type: string
+          example: "08:00:00"
+          description: "Start time of the class"
+        end_time:
+          type: string
+          example: "09:30:00"
+          description: "End time of the class"
+        lesson_name:
+          type: string
+          example: "Mathematics"
+          description: "Name of the lesson"
+        room:
+          type: string
+          example: "Room 101"
+          description: "Classroom location"
+        class:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Class 10A"
+            number:
+              type: integer
+              example: 10
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Invalid teacher ID"
+        error:
+          type: string
+          example: "BadRequest"
+        stack:
+          type: string
+          example: "Error stack trace..."
+      required:
+        - success
+        - statusCode
+        - message
