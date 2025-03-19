@@ -18,6 +18,7 @@ import {
 } from './student.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import createHttpError from 'http-errors';
+import { authenticate, restrictTo } from '../../middlewares/auth.js';
 
 const router = Router();
 
@@ -36,42 +37,74 @@ const routes = [
     method: 'patch',
     path: '/:id/class',
     handler: addStudentToClassHandler,
-    middleware: [validateStudentId, studentClassAssignmentRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+      studentClassAssignmentRules,
+      validate,
+    ],
     description: 'Assign a student to a class',
   },
   {
     method: 'patch',
     path: '/:id/field',
     handler: changeStudentFieldHandler,
-    middleware: [validateStudentId, studentChangeFieldRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+      studentChangeFieldRules,
+      validate,
+    ],
     description: 'Change a student’s subField',
   },
   {
     method: 'patch',
     path: '/:id/graduate',
     handler: graduateStudentHandler,
-    middleware: [validateStudentId, studentGraduatedStatusRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+      studentGraduatedStatusRules,
+      validate,
+    ],
     description: 'Update a student’s graduation status',
   },
   {
     method: 'patch',
     path: '/:id',
     handler: updateStudentByIdHandler,
-    middleware: [validateStudentId, studentPatchValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+      studentPatchValidationRules,
+      validate,
+    ],
     description: 'Partially update a student',
   },
   {
     method: 'delete',
     path: '/:id',
     handler: deleteStudentByIdHandler,
-    middleware: [validateStudentId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+    ],
     description: 'Delete a student by ID',
   },
   {
     method: 'get',
     path: '/:id',
     handler: getStudentByIdHandler,
-    middleware: [validateStudentId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateStudentId,
+    ],
     description: 'Get a student by ID',
   },
   // General routes
@@ -79,14 +112,19 @@ const routes = [
     method: 'post',
     path: '/',
     handler: createStudentHandler,
-    middleware: [studentValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      studentValidationRules,
+      validate,
+    ],
     description: 'Create a new student',
   },
   {
     method: 'get',
     path: '/',
     handler: getAllStudentsHandler,
-    middleware: [],
+    middleware: [authenticate, restrictTo('super-user', 'user')],
     description: 'Get all students with optional filtering',
   },
 ];

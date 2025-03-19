@@ -6,13 +6,13 @@ info:
 
 servers:
   - url: http://localhost:5000
-    description: Local server
+    description: Local development server
 
 paths:
   /students:
     post:
       summary: Create a new student
-      description: Adds a new student to the system with optional subField assignment.
+      description: Adds a new student to the system with required fields and optional class assignment.
       tags:
         - Students
       requestBody:
@@ -44,7 +44,7 @@ paths:
                   student:
                     $ref: '#/components/schemas/StudentResponse'
         '400':
-          description: Validation error or invalid subFieldId
+          description: Validation error, duplicate studentCode/nationalCode, or invalid subFieldId
           content:
             application/json:
               schema:
@@ -56,22 +56,22 @@ paths:
       tags:
         - Students
       parameters:
-        - name: first_name
+        - name: firstName
           in: query
           schema:
             type: string
           description: Filter by partial first name match (case-insensitive)
-        - name: last_name
+        - name: lastName
           in: query
           schema:
             type: string
           description: Filter by partial last name match (case-insensitive)
-        - name: student_code
+        - name: studentCode
           in: query
           schema:
             type: string
           description: Filter by exact student code
-        - name: national_code
+        - name: nationalCode
           in: query
           schema:
             type: string
@@ -92,27 +92,31 @@ paths:
           in: query
           schema:
             type: boolean
-          description: Filter by graduation status (true/false)
-        - name: min_age
+          description: Filter by graduation status
+        - name: minAge
           in: query
           schema:
             type: integer
+            minimum: 0
           description: Filter by minimum age (inclusive)
-        - name: max_age
+        - name: maxAge
           in: query
           schema:
             type: integer
+            minimum: 0
           description: Filter by maximum age (inclusive)
         - name: page
           in: query
           schema:
             type: integer
+            minimum: 1
             default: 1
           description: Page number for pagination
         - name: limit
           in: query
           schema:
             type: integer
+            minimum: 1
             default: 10
           description: Number of students per page
       responses:
@@ -140,7 +144,7 @@ paths:
   /students/{studentId}:
     get:
       summary: Get a student by ID
-      description: Fetches detailed information about a specific student, including their subField.
+      description: Fetches detailed information about a specific student, including their subField and class.
       tags:
         - Students
       parameters:
@@ -149,6 +153,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to retrieve
       responses:
         '200':
@@ -190,6 +195,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to update
       requestBody:
         required: true
@@ -220,7 +226,7 @@ paths:
                   student:
                     $ref: '#/components/schemas/StudentResponse'
         '400':
-          description: Invalid student ID or validation error
+          description: Invalid student ID, duplicate studentCode/nationalCode, or validation error
           content:
             application/json:
               schema:
@@ -243,6 +249,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to delete
       responses:
         '200':
@@ -283,6 +290,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to update
       requestBody:
         required: true
@@ -304,6 +312,8 @@ paths:
                   message:
                     type: string
                     example: "Graduated status changed to true"
+                  student:
+                    $ref: '#/components/schemas/StudentResponse'
         '400':
           description: Invalid student ID or graduated value
           content:
@@ -319,7 +329,7 @@ paths:
 
   /students/{studentId}/field:
     patch:
-      summary: Change student field
+      summary: Change student subField
       description: Updates the subField assignment for a student.
       tags:
         - Students
@@ -329,6 +339,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to update
       requestBody:
         required: true
@@ -338,7 +349,7 @@ paths:
               $ref: '#/components/schemas/ChangeFieldRequest'
       responses:
         '200':
-          description: Student field changed successfully
+          description: Student subField changed successfully
           content:
             application/json:
               schema:
@@ -349,7 +360,9 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Student's field changed to 3"
+                    example: "Student's subField changed to 3"
+                  student:
+                    $ref: '#/components/schemas/StudentResponse'
         '400':
           description: Invalid student ID or subFieldId
           content:
@@ -357,7 +370,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Student not found
+          description: Student or subField not found
           content:
             application/json:
               schema:
@@ -366,7 +379,7 @@ paths:
   /students/{studentId}/class:
     patch:
       summary: Assign student to a class
-      description: Assigns a student to a specified class, checking for existing class assignment and capacity.
+      description: Assigns a student to a specified class.
       tags:
         - Students
       parameters:
@@ -375,6 +388,7 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 1
           description: ID of the student to assign
       requestBody:
         required: true
@@ -399,7 +413,7 @@ paths:
                   student:
                     $ref: '#/components/schemas/StudentResponse'
         '400':
-          description: Invalid ID, student already in a class, or class at capacity
+          description: Invalid student ID or classId
           content:
             application/json:
               schema:
@@ -416,82 +430,121 @@ components:
     StudentRequest:
       type: object
       properties:
-        first_name:
+        firstName:
           type: string
           example: "John"
-        last_name:
+          description: "Student's first name"
+        lastName:
           type: string
           example: "Doe"
-        student_code:
+          description: "Student's last name"
+        studentCode:
           type: string
           example: "STU12345"
+          description: "Unique student code"
         phone:
           type: string
           example: "09123456789"
-        static_phone:
+          description: "Student's mobile phone number (Iranian format)"
+        staticPhone:
           type: string
-          example: "02123456789"
-        national_code:
+          example: "02112345678"
+          description: "Student's landline phone number (Iranian format)"
+        nationalCode:
           type: string
           example: "1234567890"
+          description: "Student's 10-digit national code"
         nationality:
           type: string
           enum: ["ایران", "توابع"]
           example: "ایران"
-        drop_out_school:
+          description: "Student's nationality"
+        dropOutSchool:
           type: boolean
           example: false
+          description: "Whether the student has dropped out"
         address:
           type: string
           example: "Tehran, Iran"
+          description: "Student's address"
         gender:
           type: string
           enum: ["male", "female", "other"]
           example: "male"
-        father_name:
+          description: "Student's gender"
+        fatherName:
           type: string
           example: "Ali Doe"
-        father_phone:
+          description: "Student's father's name"
+        fatherPhone:
           type: string
           example: "09123456789"
-        mother_phone:
+          description: "Father's mobile phone number (Iranian format)"
+        motherPhone:
           type: string
           example: "09123456789"
-        siblings_number:
+          description: "Mother's mobile phone number (Iranian format)"
+        siblingsNumber:
           type: integer
           example: 2
+          description: "Number of siblings"
         age:
           type: integer
           example: 16
+          description: "Student's age"
         field:
           type: string
           example: "Computer Science"
+          description: "Student's field of study"
         status:
           type: string
           enum: ["active", "inactive"]
           example: "active"
+          description: "Student's status"
         graduated:
           type: boolean
           example: false
-        last_school:
+          description: "Whether the student has graduated"
+        lastSchool:
           type: string
           example: "Tehran High School"
-        last_year_average:
+          description: "Student's last attended school"
+        lastYearAverage:
           type: number
           format: float
           example: 18.5
-        math_mark:
-          type: number
-          format: float
-          example: 19.0
-        discipline_mark:
-          type: number
-          format: float
-          example: 20.0
-        sub_field_id:
+          description: "Student's last year average grade (0-20)"
+        subFieldId:
           type: integer
           example: 3
-          description: ID of the related subField
+          description: "ID of the student's subField"
+        classId:
+          type: integer
+          example: 1
+          description: "ID of the student's assigned class (optional)"
+          nullable: true
+      required:
+        - firstName
+        - lastName
+        - studentCode
+        - phone
+        - staticPhone
+        - nationalCode
+        - nationality
+        - dropOutSchool
+        - address
+        - gender
+        - fatherName
+        - fatherPhone
+        - motherPhone
+        - siblingsNumber
+        - age
+        - field
+        - status
+        - graduated
+        - lastSchool
+        - lastYearAverage
+        - subFieldId
 
     StudentResponse:
       type: object
@@ -499,28 +552,29 @@ components:
         id:
           type: integer
           example: 1
-        first_name:
+          description: "Unique student ID"
+        firstName:
           type: string
           example: "John"
-        last_name:
+        lastName:
           type: string
           example: "Doe"
-        student_code:
+        studentCode:
           type: string
           example: "STU12345"
         phone:
           type: string
           example: "09123456789"
-        static_phone:
+        staticPhone:
           type: string
-          example: "02123456789"
-        national_code:
+          example: "02112345678"
+        nationalCode:
           type: string
           example: "1234567890"
         nationality:
           type: string
           example: "ایران"
-        drop_out_school:
+        dropOutSchool:
           type: boolean
           example: false
         address:
@@ -529,16 +583,16 @@ components:
         gender:
           type: string
           example: "male"
-        father_name:
+        fatherName:
           type: string
           example: "Ali Doe"
-        father_phone:
+        fatherPhone:
           type: string
           example: "09123456789"
-        mother_phone:
+        motherPhone:
           type: string
           example: "09123456789"
-        siblings_number:
+        siblingsNumber:
           type: integer
           example: 2
         age:
@@ -553,46 +607,68 @@ components:
         graduated:
           type: boolean
           example: false
-        last_school:
+        lastSchool:
           type: string
           example: "Tehran High School"
-        last_year_average:
+        lastYearAverage:
           type: number
           example: 18.5
-        math_mark:
-          type: number
-          example: 19.0
-        discipline_mark:
-          type: number
-          example: 20.0
-        sub_field_id:
+        subFieldId:
           type: integer
           example: 3
-        class_id:
+        classId:
           type: integer
           example: 1
-          description: ID of the assigned class
-        created_at:
+          nullable: true
+        createdAt:
           type: string
           format: date-time
           example: "2025-03-14T10:00:00Z"
+          description: "Creation timestamp"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-14T12:00:00Z"
+          description: "Last update timestamp"
         subField:
           type: object
           properties:
+            id:
+              type: integer
+              example: 3
             name:
               type: string
               example: "Software Engineering"
+          description: "Details of the assigned subField"
+        class:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Class 10A"
+            number:
+              type: integer
+              example: 10
+          description: "Details of the assigned class"
+          nullable: true
 
     StudentListResponse:
       type: object
       properties:
-        full_name:
+        id:
+          type: integer
+          example: 1
+        fullName:
           type: string
           example: "John Doe"
-        student_code:
+          description: "Concatenated firstName and lastName"
+        studentCode:
           type: string
           example: "STU12345"
-        national_code:
+        nationalCode:
           type: string
           example: "1234567890"
 
@@ -602,28 +678,29 @@ components:
         graduated:
           type: boolean
           example: true
+          description: "New graduation status"
       required:
         - graduated
 
     ChangeFieldRequest:
       type: object
       properties:
-        sub_field_id:
+        subFieldId:
           type: integer
           example: 3
-          description: ID of the new subField
+          description: "ID of the new subField"
       required:
-        - sub_field_id
+        - subFieldId
 
     ClassAssignmentRequest:
       type: object
       properties:
-        class_id:
+        classId:
           type: integer
           example: 1
-          description: ID of the class to assign the student to
+          description: "ID of the class to assign the student to"
       required:
-        - class_id
+        - classId
 
     ErrorResponse:
       type: object
@@ -643,6 +720,7 @@ components:
         stack:
           type: string
           example: "Error stack trace..."
+          description: "Stack trace (development only)"
       required:
         - success
         - statusCode

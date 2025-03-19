@@ -2,7 +2,9 @@
 import { StatusCodes } from 'http-status-codes';
 import { Teacher } from './teacher.model.js';
 import createHttpError from 'http-errors';
-import { Sequelize } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
+import { Schedule } from '../schedules/schedule.model.js';
+import { Class } from '../class/class.model.js';
 
 // Helper: Validate and parse ID
 const validateTeacherId = (id) => {
@@ -156,6 +158,72 @@ export async function deleteTeacherHandler(req, res, next) {
     res.status(StatusCodes.OK).json({
       success: true,
       message: 'Teacher deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getTeacherScheduleHandler(req, res, next) {
+  try {
+    const teacherId = validateTeacherId(req.params.id);
+    await checkTeacherExists(teacherId);
+
+    const schedules = await Schedule.findAll({
+      where: {
+        [Op.or]: [{ teacher_id_1: teacherId }, { teacher_id_2: teacherId }],
+      },
+      attributes: [
+        'teacher_id_1',
+        'teacher_id_2',
+        'day_of_week',
+        'session_number',
+        'start_time',
+        'end_time',
+        'lesson_name',
+        'room',
+      ],
+      include: [
+        {
+          model: Class,
+          as: 'class',
+          attributes: ['name', 'number'],
+        },
+      ],
+      order: [
+        ['day_of_week', 'ASC'],
+        ['session_number', 'ASC'],
+      ],
+      raw: true, // Use raw to simplify post-processing
+    });
+
+    // Map schedules to add role information
+    const formattedSchedules = schedules.map((schedule) => {
+      const role =
+        schedule.teacher_id_1 === teacherId ? 'teacher1' : 'teacher2';
+      return {
+        id: schedule.id,
+        dayOfWeek: schedule.day_of_week,
+        sessionNumber: schedule.session_number,
+        startTime: schedule.start_time,
+        endTime: schedule.end_time,
+        lessonName: schedule.lesson_name,
+        room: schedule.room,
+        role, // Indicate if teacher is teacher1 or teacher2
+        class: {
+          id: schedule['class.id'],
+          name: schedule['class.name'],
+          number: schedule['class.number'],
+        },
+      };
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: formattedSchedules.length
+        ? 'Teacher schedule retrieved successfully'
+        : 'No schedule found for this teacher',
+      schedules: formattedSchedules,
     });
   } catch (error) {
     next(error);

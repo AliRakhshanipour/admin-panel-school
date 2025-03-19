@@ -1,0 +1,84 @@
+# src/docs/auth.yaml
+paths:
+  /auth/login:
+    post:
+      summary: Login a user
+      description: Authenticates a user and returns a JWT token for accessing protected endpoints.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Login successful"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized (invalid credentials)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "superadmin"
+          description: "User's username"
+        password:
+          type: string
+          example: "superpassword123"
+          description: "User's password"
+      required:
+        - username
+        - password
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: "Invalid username or password"
+        error:
+          type: string
+          example: "Unauthorized"
+        stack:
+          type: string
+          example: "Error stack trace..."
+          description: "Stack trace (development only)"
+      required:
+        - success
+        - statusCode
+        - message

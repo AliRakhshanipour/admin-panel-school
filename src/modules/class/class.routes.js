@@ -12,6 +12,7 @@ import {
   classValidationRules,
 } from './class.validation.js';
 import { validate } from '../../middlewares/validate.js';
+import { authenticate, restrictTo } from '../../middlewares/auth.js';
 
 const router = Router();
 
@@ -30,28 +31,46 @@ const routes = [
     method: 'get',
     path: '/:id/students',
     handler: getClassStudentsHandler,
-    middleware: [validateClassId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateClassId,
+    ],
     description: 'Get students of a specific class',
   },
   {
     method: 'delete',
     path: '/:id',
     handler: deleteClassHandler,
-    middleware: [validateClassId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateClassId,
+    ],
     description: 'Delete a specific class by ID',
   },
   {
     method: 'patch',
     path: '/:id',
     handler: updateClassHandler,
-    middleware: [validateClassId, classPatchValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateClassId,
+      classPatchValidationRules,
+      validate,
+    ],
     description: 'Update a specific class by ID',
   },
   {
     method: 'get',
     path: '/:id',
     handler: getClassByIdHandler,
-    middleware: [validateClassId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateClassId,
+    ],
     description: 'Get a specific class by ID',
   },
   // General routes (no parameters)
@@ -59,14 +78,19 @@ const routes = [
     method: 'post',
     path: '/',
     handler: createClassHandler,
-    middleware: [classValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      classValidationRules,
+      validate,
+    ],
     description: 'Create a new class',
   },
   {
     method: 'get',
     path: '/',
     handler: getAllClassesHandler,
-    middleware: [],
+    middleware: [authenticate, restrictTo('super-user', 'user')],
     description: 'Get all classes with pagination',
   },
 ];

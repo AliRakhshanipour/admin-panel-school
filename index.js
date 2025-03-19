@@ -10,6 +10,8 @@ import { setupSwagger } from './src/configs/swagger.config.js';
 import { fieldRouter } from './src/modules/fields/field.routes.js';
 import { classRouter } from './src/modules/class/class.routes.js';
 import { teacherRouter } from './src/modules/teacher/teacher.routes.js';
+import { scheduleRouter } from './src/modules/schedules/schedule.routes.js';
+import { authRouter } from './src/modules/auth/auth.routes.js';
 
 const bootstrap = async () => {
   const app = express();
@@ -23,6 +25,8 @@ const bootstrap = async () => {
   app.use('/fields', fieldRouter);
   app.use('/classes', classRouter);
   app.use('/teachers', teacherRouter);
+  app.use('/schedules', scheduleRouter);
+  app.use('/auth', authRouter);
   await initialDB();
   await authenticateDB();
 

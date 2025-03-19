@@ -6,6 +6,7 @@ import {
   getTeacherByIdHandler,
   updateTeacherHandler,
   deleteTeacherHandler,
+  getTeacherScheduleHandler,
 } from './teacher.service.js';
 import {
   teacherValidationRules,
@@ -13,6 +14,7 @@ import {
 } from './teacher.validation.js';
 import { validate } from '../../middlewares/validate.js';
 import createHttpError from 'http-errors';
+import { authenticate, restrictTo } from '../../middlewares/auth.js';
 
 const router = Router();
 
@@ -30,35 +32,65 @@ const routes = [
     method: 'patch',
     path: '/:id',
     handler: updateTeacherHandler,
-    middleware: [validateTeacherId, teacherPatchValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateTeacherId,
+      teacherPatchValidationRules,
+      validate,
+    ],
     description: 'Partially update a teacher',
   },
   {
     method: 'delete',
     path: '/:id',
     handler: deleteTeacherHandler,
-    middleware: [validateTeacherId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateTeacherId,
+    ],
     description: 'Delete a teacher by ID',
+  },
+  {
+    method: 'get',
+    path: '/:id/schedule',
+    handler: getTeacherScheduleHandler,
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateTeacherId,
+    ],
+    description: 'Get a teacher by ID',
   },
   {
     method: 'get',
     path: '/:id',
     handler: getTeacherByIdHandler,
-    middleware: [validateTeacherId],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      validateTeacherId,
+    ],
     description: 'Get a teacher by ID',
   },
   {
     method: 'post',
     path: '/',
     handler: createTeacherHandler,
-    middleware: [teacherValidationRules, validate],
+    middleware: [
+      authenticate,
+      restrictTo('super-user', 'user'),
+      teacherValidationRules,
+      validate,
+    ],
     description: 'Create a new teacher',
   },
   {
     method: 'get',
     path: '/',
     handler: getAllTeachersHandler,
-    middleware: [],
+    middleware: [authenticate, restrictTo('super-user', 'user')],
     description: 'Get all teachers with optional filtering',
   },
 ];

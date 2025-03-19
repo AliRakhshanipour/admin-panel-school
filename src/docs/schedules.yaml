@@ -1,0 +1,215 @@
+paths:
+  /schedules:
+    post:
+      summary: Create a new schedule
+      description: Adds a new schedule entry with up to two teachers, enforcing time and assignment constraints.
+      tags:
+        - Schedules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+      responses:
+        '201':
+          description: Schedule created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Schedule created successfully"
+                  schedule:
+                    $ref: '#/components/schemas/ScheduleResponse'
+        '400':
+          description: Validation error, teacher/class conflict, or invalid IDs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get all schedules
+      description: Retrieves a paginated list of schedules with optional filtering by class or day.
+      tags:
+        - Schedules
+      parameters:
+        - name: class_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by class ID
+        - name: day_of_week
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 3
+          description: Filter by day of week (0=Saturday, 3=Tuesday)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of schedules per page
+      responses:
+        '200':
+          description: Successfully retrieved schedules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Schedules fetched successfully"
+                  total:
+                    type: integer
+                    example: 10
+                  schedules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScheduleResponse'
+
+components:
+  schemas:
+    ScheduleRequest:
+      type: object
+      properties:
+        class_id:
+          type: integer
+          example: 1
+          description: "ID of the class"
+        teacher_id_1:
+          type: integer
+          example: 1
+          description: "ID of the primary teacher"
+        teacher_id_2:
+          type: integer
+          example: 2
+          description: "ID of the optional second teacher"
+          nullable: true
+        day_of_week:
+          type: integer
+          example: 0
+          description: "Day of the week (0=Saturday, 3=Tuesday)"
+        session_number:
+          type: integer
+          example: 1
+          description: "Session number (1 to 4)"
+        lesson_name:
+          type: string
+          example: "Mathematics"
+          description: "Name of the lesson"
+        room:
+          type: string
+          example: "Room 101"
+          description: "Classroom location"
+      required:
+        - class_id
+        - teacher_id_1
+        - day_of_week
+        - session_number
+        - lesson_name
+        - room
+
+    ScheduleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        class_id:
+          type: integer
+          example: 1
+        teacher_id_1:
+          type: integer
+          example: 1
+        teacher_id_2:
+          type: integer
+          example: 2
+          nullable: true
+        day_of_week:
+          type: integer
+          example: 0
+        session_number:
+          type: integer
+          example: 1
+        start_time:
+          type: string
+          example: "08:00:00"
+        end_time:
+          type: string
+          example: "09:30:00"
+        lesson_name:
+          type: string
+          example: "Mathematics"
+        room:
+          type: string
+          example: "Room 101"
+        class:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Class 10A"
+            number:
+              type: integer
+              example: 10
+        teacher1:
+          type: object
+          properties:
+            first_name:
+              type: string
+              example: "Sara"
+            last_name:
+              type: string
+              example: "Ahmadi"
+        teacher2:
+          type: object
+          properties:
+            first_name:
+              type: string
+              example: "Ali"
+            last_name:
+              type: string
+              example: "Rezaei"
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Teacher already assigned to another class at this time"
+        error:
+          type: string
+          example: "BadRequest"
+        stack:
+          type: string
+          example: "Error stack trace..."
+      required:
+        - success
+        - statusCode
+        - message

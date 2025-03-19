@@ -1,10 +1,12 @@
+// modules/students/student.validation.js
 import { body } from 'express-validator';
 import { Student } from './student.model.js';
+import { Field } from '../fields/field.model.js';
 import { Class } from '../class/class.model.js';
 
 // For POST /students (required fields for creation)
 export const studentValidationRules = [
-  body('student_code') // Changed to match Sequelize convention
+  body('studentCode')
     .trim()
     .notEmpty()
     .withMessage('Student code is required')
@@ -12,7 +14,7 @@ export const studentValidationRules = [
     .withMessage('Student code must be a string')
     .custom(async (value) => {
       const existingStudent = await Student.findOne({
-        where: { student_code: value },
+        where: { studentCode: value },
       });
       if (existingStudent) {
         throw new Error('Student code must be unique');
@@ -20,14 +22,14 @@ export const studentValidationRules = [
       return true;
     }),
 
-  body('first_name')
+  body('firstName')
     .trim()
     .notEmpty()
     .withMessage('First name is required')
     .isString()
     .withMessage('First name must be a string'),
 
-  body('last_name')
+  body('lastName')
     .trim()
     .notEmpty()
     .withMessage('Last name is required')
@@ -41,13 +43,14 @@ export const studentValidationRules = [
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Phone number must be a valid Iranian mobile number'),
 
-  body('static_phone')
-    .optional()
+  body('staticPhone')
     .trim()
+    .notEmpty() // Changed to required to match model
+    .withMessage('Static phone number is required')
     .matches(/^(\d{2,3})?\d{7,8}$/)
     .withMessage('Static phone must be a valid Iranian landline number'),
 
-  body('national_code')
+  body('nationalCode')
     .trim()
     .notEmpty()
     .withMessage('National code is required')
@@ -55,7 +58,7 @@ export const studentValidationRules = [
     .withMessage('National code must be a 10-digit number')
     .custom(async (value) => {
       const existingStudent = await Student.findOne({
-        where: { national_code: value },
+        where: { nationalCode: value },
       });
       if (existingStudent) {
         throw new Error('National code must be unique');
@@ -68,7 +71,7 @@ export const studentValidationRules = [
     .isIn(['ایران', 'توابع'])
     .withMessage('Nationality must be either ایران or توابع'),
 
-  body('drop_out_school')
+  body('dropOutSchool')
     .notEmpty()
     .isBoolean()
     .withMessage('Drop-out status must be a boolean'),
@@ -85,28 +88,28 @@ export const studentValidationRules = [
     .isIn(['male', 'female', 'other'])
     .withMessage('Gender must be male, female, or other'),
 
-  body('father_name')
+  body('fatherName')
     .trim()
     .notEmpty()
     .withMessage('Father name is required')
     .isString()
     .withMessage('Father name must be a string'),
 
-  body('father_phone')
+  body('fatherPhone')
     .trim()
     .notEmpty()
     .withMessage('Father phone number is required')
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Father phone number must be a valid Iranian mobile number'),
 
-  body('mother_phone')
+  body('motherPhone')
     .trim()
     .notEmpty()
     .withMessage('Mother phone number is required')
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Mother phone number must be a valid Iranian mobile number'),
 
-  body('siblings_number')
+  body('siblingsNumber')
     .notEmpty()
     .isInt({ min: 0 })
     .withMessage('Siblings number must be a non-negative integer'),
@@ -133,36 +136,19 @@ export const studentValidationRules = [
     .isBoolean()
     .withMessage('Graduated must be a boolean'),
 
-  body('graduated_year')
-    .optional()
-    .isInt({ min: 1900, max: new Date().getFullYear() })
-    .withMessage(
-      `Graduated year must be between 1900 and ${new Date().getFullYear()}`
-    ),
-
-  body('last_school')
+  body('lastSchool')
     .trim()
     .notEmpty()
     .withMessage('Last school is required')
     .isString()
     .withMessage('Last school must be a string'),
 
-  body('last_year_average')
+  body('lastYearAverage')
     .notEmpty()
     .isFloat({ min: 0, max: 20 })
     .withMessage('Last year average must be between 0 and 20'),
 
-  body('math_mark')
-    .notEmpty()
-    .isFloat({ min: 0, max: 20 })
-    .withMessage('Math mark must be between 0 and 20'),
-
-  body('discipline_mark')
-    .notEmpty()
-    .isFloat({ min: 0, max: 20 })
-    .withMessage('Discipline mark must be between 0 and 20'),
-
-  body('sub_field_id')
+  body('subFieldId')
     .notEmpty()
     .isInt({ min: 1 })
     .withMessage('Sub Field ID must be a positive integer')
@@ -171,18 +157,20 @@ export const studentValidationRules = [
       if (!field) throw new Error('Invalid subField ID');
       return true;
     }),
+
+  // Removed fields not in the final model: graduated_year, math_mark, discipline_mark
 ];
 
 // For PATCH /students/:studentId (all fields optional)
 export const studentPatchValidationRules = [
-  body('student_code')
+  body('studentCode')
     .optional()
     .trim()
     .isString()
     .withMessage('Student code must be a string')
     .custom(async (value, { req }) => {
       const existingStudent = await Student.findOne({
-        where: { student_code: value },
+        where: { studentCode: value },
       });
       if (
         existingStudent &&
@@ -193,13 +181,13 @@ export const studentPatchValidationRules = [
       return true;
     }),
 
-  body('first_name')
+  body('firstName')
     .optional()
     .trim()
     .isString()
     .withMessage('First name must be a string'),
 
-  body('last_name')
+  body('lastName')
     .optional()
     .trim()
     .isString()
@@ -211,20 +199,20 @@ export const studentPatchValidationRules = [
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Phone number must be a valid Iranian mobile number'),
 
-  body('static_phone')
+  body('staticPhone')
     .optional()
     .trim()
     .matches(/^(\d{2,3})?\d{7,8}$/)
     .withMessage('Static phone must be a valid Iranian landline number'),
 
-  body('national_code')
+  body('nationalCode')
     .optional()
     .trim()
     .matches(/^\d{10}$/)
     .withMessage('National code must be a 10-digit number')
     .custom(async (value, { req }) => {
       const existingStudent = await Student.findOne({
-        where: { national_code: value },
+        where: { nationalCode: value },
       });
       if (
         existingStudent &&
@@ -240,7 +228,7 @@ export const studentPatchValidationRules = [
     .isIn(['ایران', 'توابع'])
     .withMessage('Nationality must be either ایران or توابع'),
 
-  body('drop_out_school')
+  body('dropOutSchool')
     .optional()
     .isBoolean()
     .withMessage('Drop-out status must be a boolean'),
@@ -256,25 +244,25 @@ export const studentPatchValidationRules = [
     .isIn(['male', 'female', 'other'])
     .withMessage('Gender must be male, female, or other'),
 
-  body('father_name')
+  body('fatherName')
     .optional()
     .trim()
     .isString()
     .withMessage('Father name must be a string'),
 
-  body('father_phone')
+  body('fatherPhone')
     .optional()
     .trim()
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Father phone number must be a valid Iranian mobile number'),
 
-  body('mother_phone')
+  body('motherPhone')
     .optional()
     .trim()
     .matches(/^(0|(\+98))?9\d{9}$/)
     .withMessage('Mother phone number must be a valid Iranian mobile number'),
 
-  body('siblings_number')
+  body('siblingsNumber')
     .optional()
     .isInt({ min: 0 })
     .withMessage('Siblings number must be a non-negative integer'),
@@ -300,35 +288,18 @@ export const studentPatchValidationRules = [
     .isBoolean()
     .withMessage('Graduated must be a boolean'),
 
-  body('graduated_year')
-    .optional()
-    .isInt({ min: 1900, max: new Date().getFullYear() })
-    .withMessage(
-      `Graduated year must be between 1900 and ${new Date().getFullYear()}`
-    ),
-
-  body('last_school')
+  body('lastSchool')
     .optional()
     .trim()
     .isString()
     .withMessage('Last school must be a string'),
 
-  body('last_year_average')
+  body('lastYearAverage')
     .optional()
     .isFloat({ min: 0, max: 20 })
     .withMessage('Last year average must be between 0 and 20'),
 
-  body('math_mark')
-    .optional()
-    .isFloat({ min: 0, max: 20 })
-    .withMessage('Math mark must be between 0 and 20'),
-
-  body('discipline_mark')
-    .optional()
-    .isFloat({ min: 0, max: 20 })
-    .withMessage('Discipline mark must be between 0 and 20'),
-
-  body('sub_field_id')
+  body('subFieldId')
     .optional()
     .isInt({ min: 1 })
     .withMessage('Sub Field ID must be a positive integer')
@@ -337,6 +308,8 @@ export const studentPatchValidationRules = [
       if (!field) throw new Error('Invalid subField ID');
       return true;
     }),
+
+  // Removed fields not in the final model: graduated_year, math_mark, discipline_mark
 ];
 
 // For PATCH /students/:studentId/graduate
@@ -349,7 +322,7 @@ export const studentGraduatedStatusRules = [
 
 // For PATCH /students/:studentId/field
 export const studentChangeFieldRules = [
-  body('sub_field_id')
+  body('subFieldId')
     .notEmpty()
     .isInt({ min: 1 })
     .withMessage('Sub Field ID must be a positive integer')
@@ -362,7 +335,7 @@ export const studentChangeFieldRules = [
 
 // For PATCH /students/:studentId/class
 export const studentClassAssignmentRules = [
-  body('class_id')
+  body('classId')
     .notEmpty()
     .isInt({ min: 1 })
     .withMessage('Class ID must be a positive integer')

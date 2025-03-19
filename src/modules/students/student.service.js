@@ -92,6 +92,8 @@ const buildStudentWhereClause = ({
 export async function createStudentHandler(req, res, next) {
   try {
     const { subFieldId } = req.body;
+    console.log(req.body);
+
     if (subFieldId) await checkFieldExists(subFieldId);
 
     const student = await Student.create(req.body);
