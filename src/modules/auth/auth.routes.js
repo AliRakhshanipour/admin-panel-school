@@ -1,8 +1,8 @@
 // modules/auth/auth.routes.js
 import { Router } from 'express';
+import { validate } from '../../middlewares/validate.js';
 import { loginHandler } from './auth.service.js';
 import { loginValidationRules } from './auth.validation.js';
-import { validate } from '../../middlewares/validate.js';
 
 const router = Router();
 

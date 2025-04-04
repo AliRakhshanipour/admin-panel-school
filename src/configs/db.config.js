@@ -1,10 +1,12 @@
+import { config } from 'dotenv';
 import { Sequelize } from 'sequelize';
+config();
 
-const sequelize = new Sequelize({
+export const sequelize = new Sequelize({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   username: process.env.DB_USER,
-  password: '',
+  password: process.env.DB_PASSWORD ?? '',
   database: process.env.DB_NAME,
   dialect: 'postgres',
   logging: false,
@@ -13,7 +15,7 @@ const sequelize = new Sequelize({
   },
 });
 
-const authenticateDB = async () => {
+export const authenticateDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connected to the database successfully');
@@ -22,4 +24,3 @@ const authenticateDB = async () => {
     process.exit(1);
   }
 };
-export { sequelize, authenticateDB };

@@ -19,6 +19,9 @@ const schedulesDocs = YAML.load(
 );
 const authDocs = YAML.load(path.join(process.cwd(), '/src/docs/auth.yaml'));
 const usersDocs = YAML.load(path.join(process.cwd(), '/src/docs/users.yaml'));
+const attendanceDocs = YAML.load(
+  path.join(process.cwd(), '/src/docs/attendances.yaml')
+);
 
 // Base Swagger definition
 const baseSwagger = {
@@ -47,6 +50,7 @@ const baseSwagger = {
     ...schedulesDocs.paths,
     ...authDocs.paths,
     ...usersDocs.paths,
+    ...attendanceDocs.paths,
   },
   components: {
     securitySchemes: {
@@ -64,6 +68,7 @@ const baseSwagger = {
       ...schedulesDocs.components.schemas,
       ...authDocs.components.schemas,
       ...usersDocs.components.schemas,
+      ...attendanceDocs.components.schemas,
     },
   },
 };

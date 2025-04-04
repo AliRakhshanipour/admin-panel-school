@@ -1,5 +1,7 @@
 // initialDB.js
+import bcrypt from 'bcrypt';
 import { sequelize } from '../configs/db.config.js';
+import { Attendance } from '../modules/attendances/attendance.model.js';
 import { Class } from '../modules/class/class.model.js';
 import { Field } from '../modules/fields/field.model.js';
 import { Schedule } from '../modules/schedules/schedule.model.js';
@@ -9,20 +11,13 @@ import { User } from '../modules/users/user.model.js';
 
 const initialDB = async () => {
   try {
-    // === Field Associations ===
-    // Field can have subFields (self-referencing)
+    // Existing associations...
     Field.hasMany(Field, { foreignKey: 'parent_id', as: 'subFields' });
     Field.belongsTo(Field, { foreignKey: 'parent_id', as: 'parentField' });
-
-    // Student belongs to a Field (subField)
-    Student.belongsTo(Field, { foreignKey: 'subFieldId', as: 'subField' }); // Matches camelCase from student.model.js
+    Student.belongsTo(Field, { foreignKey: 'subFieldId', as: 'subField' });
     Field.hasMany(Student, { foreignKey: 'subFieldId', as: 'students' });
-
-    // === Student-Class Associations ===
-    Student.belongsTo(Class, { foreignKey: 'classId', as: 'class' }); // Matches camelCase from student.model.js
+    Student.belongsTo(Class, { foreignKey: 'classId', as: 'class' });
     Class.hasMany(Student, { foreignKey: 'classId', as: 'students' });
-
-    // === Schedule Associations ===
     Schedule.belongsTo(Class, { foreignKey: 'class_id', as: 'class' });
     Class.hasMany(Schedule, { foreignKey: 'class_id', as: 'schedules' });
     Schedule.belongsTo(Teacher, { foreignKey: 'teacher_id_1', as: 'teacher1' });
@@ -30,22 +25,46 @@ const initialDB = async () => {
     Teacher.hasMany(Schedule, { foreignKey: 'teacher_id_1', as: 'schedules1' });
     Teacher.hasMany(Schedule, { foreignKey: 'teacher_id_2', as: 'schedules2' });
 
-    // Sync the database
-    await sequelize.sync({ alter: true });
-    console.log('Database synced successfully!');
+    // Attendance associations
+    Student.hasMany(Attendance, {
+      foreignKey: 'entity_id',
+      constraints: false,
+      as: 'attendances',
+      scope: { entity_type: 'student' },
+    });
+    Attendance.belongsTo(Student, {
+      foreignKey: 'entity_id',
+      constraints: false,
+      as: 'student',
+    });
+    Teacher.hasMany(Attendance, {
+      foreignKey: 'entity_id',
+      constraints: false,
+      as: 'attendances',
+      scope: { entity_type: 'teacher' },
+    });
+    Attendance.belongsTo(Teacher, {
+      foreignKey: 'entity_id',
+      constraints: false,
+      as: 'teacher',
+    });
 
-    // Seed a default super-user
+    await sequelize.sync({ alter: true });
+    console.log('database syncronized successfully!');
+
+    // Seed super-user
     const superUser = await User.findOne({ where: { username: 'superadmin' } });
     if (!superUser) {
+      const hashedPassword = await bcrypt.hash('superpassword123', 10);
       await User.create({
         username: 'superadmin',
-        password: 'superpassword123',
+        password: hashedPassword,
         role: 'super-user',
       });
       console.log('Default super-user created: superadmin / superpassword123');
     }
   } catch (error) {
-    console.error('Error syncing the database:', error);
+    console.error('Error initializing the database:', error);
     throw error;
   }
 };

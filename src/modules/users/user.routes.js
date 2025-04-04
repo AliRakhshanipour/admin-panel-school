@@ -1,18 +1,18 @@
 // modules/users/user.routes.js
 import { Router } from 'express';
+import { authenticate, restrictTo } from '../../middlewares/auth.js';
+import { validate } from '../../middlewares/validate.js';
 import {
   createUserHandler,
+  deleteUserHandler,
   getAllUsersHandler,
   getUserByIdHandler,
   updateUserHandler,
-  deleteUserHandler,
 } from './user.service.js';
 import {
-  userValidationRules,
   userPatchValidationRules,
+  userValidationRules,
 } from './user.validation.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, restrictTo } from '../../middlewares/auth.js';
 
 const router = Router();
 

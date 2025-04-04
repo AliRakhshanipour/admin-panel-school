@@ -1,7 +1,7 @@
 // modules/users/user.model.js
+import bcrypt from 'bcrypt';
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../configs/db.config.js';
-import bcrypt from 'bcrypt';
 
 const User = sequelize.define(
   'User',
@@ -38,10 +38,13 @@ const User = sequelize.define(
     timestamps: true,
     hooks: {
       beforeCreate: async (user) => {
-        user.password = await bcrypt.hash(user.password, 10);
+        if (!user.password.match(/^\$2[aby]\$/)) {
+          // Check if it's not a bcrypt hash
+          user.password = await bcrypt.hash(user.password, 10);
+        }
       },
       beforeUpdate: async (user) => {
-        if (user.changed('password')) {
+        if (user.changed('password') && !user.password.match(/^\$2[aby]\$/)) {
           user.password = await bcrypt.hash(user.password, 10);
         }
       },

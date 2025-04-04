@@ -1,0 +1,413 @@
+openapi: 3.0.0
+info:
+  title: Attendance API
+  description: API documentation for managing attendance records in the School Management System
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local server
+
+paths:
+  /attendance:
+    post:
+      summary: Create a new attendance record
+      description: Adds a new attendance record for a student or teacher, restricted to super-user and admin roles.
+      tags:
+        - Attendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+      responses:
+        '201':
+          description: Attendance record created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Attendance created successfully'
+                  attendance:
+                    $ref: '#/components/schemas/AttendanceResponse'
+        '400':
+          description: Validation error or invalid entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendance/{id}:
+    patch:
+      summary: Update an attendance record by ID
+      description: Partially updates an existing attendance record, restricted to super-user and admin roles.
+      tags:
+        - Attendance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the attendance record to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendancePatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendancePatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendancePatchRequest'
+      responses:
+        '200':
+          description: Attendance updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Attendance updated successfully'
+                  attendance:
+                    $ref: '#/components/schemas/AttendanceResponse'
+        '400':
+          description: Invalid attendance ID or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Attendance record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete an attendance record by ID
+      description: Removes an attendance record from the system, restricted to super-user and admin roles.
+      tags:
+        - Attendance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the attendance record to delete
+      responses:
+        '200':
+          description: Attendance deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Attendance deleted successfully'
+        '400':
+          description: Invalid attendance ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Attendance record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendance/{entityType}/{entityId}:
+    get:
+      summary: Get attendance for an entity
+      description: Retrieves attendance records for a specific student or teacher, restricted to super-user and admin roles.
+      tags:
+        - Attendance
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [student, teacher]
+          description: Type of entity (student or teacher)
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the entity (student or teacher) to retrieve attendance for
+      responses:
+        '200':
+          description: Attendance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Attendance fetched successfully'
+                  attendance:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AttendanceResponse'
+        '400':
+          description: Invalid entity type or ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendance/class/{classId}:
+    get:
+      summary: Get student attendance for a class
+      description: Retrieves attendance records for all students in a specific class, optionally filtered by date, restricted to super-user and admin roles.
+      tags:
+        - Attendance
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the class to retrieve attendance for
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter attendance by specific date (e.g., YYYY-MM-DD)
+      responses:
+        '200':
+          description: Class attendance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Class attendance fetched successfully'
+                  attendance:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassAttendanceResponse'
+        '400':
+          description: Invalid class ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    AttendanceRequest:
+      type: object
+      properties:
+        entityId:
+          type: integer
+          example: 1
+          description: 'ID of the student or teacher'
+        entityType:
+          type: string
+          enum: [student, teacher]
+          example: 'student'
+          description: 'Type of entity (student or teacher)'
+        date:
+          type: string
+          format: date
+          example: '2025-03-21'
+          description: 'Date of the attendance record'
+        status:
+          type: string
+          enum: [present, absent, late]
+          example: 'present'
+          description: 'Attendance status'
+      required:
+        - entityId
+        - entityType
+        - date
+        - status
+
+    AttendancePatchRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2025-03-21'
+          description: 'Date of the attendance record (optional)'
+        status:
+          type: string
+          enum: [present, absent, late]
+          example: 'present'
+          description: 'Attendance status (optional)'
+
+    AttendanceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        entityId:
+          type: integer
+          example: 1
+        entityType:
+          type: string
+          example: 'student'
+        date:
+          type: string
+          format: date
+          example: '2025-03-21'
+        status:
+          type: string
+          example: 'present'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-03-21T10:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-03-21T10:00:00Z'
+
+    ClassAttendanceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        entityId:
+          type: integer
+          example: 1
+        entityType:
+          type: string
+          example: 'student'
+        date:
+          type: string
+          format: date
+          example: '2025-03-21'
+        status:
+          type: string
+          example: 'present'
+        student:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            firstName:
+              type: string
+              example: 'Ali'
+            lastName:
+              type: string
+              example: 'Rezaei'
+            studentCode:
+              type: string
+              example: 'STU12345'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-03-21T10:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-03-21T10:00:00Z'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: 'Invalid entity ID'
+        error:
+          type: string
+          example: 'BadRequest'
+        stack:
+          type: string
+          example: 'Error stack trace...'
+      required:
+        - success
+        - statusCode
+        - message
